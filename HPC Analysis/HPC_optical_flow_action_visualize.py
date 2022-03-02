@@ -11,13 +11,13 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as md
 import HPC_optical_flow_filters
 from scipy.signal import savgol_filter
-import matplotlib 
+import matplotlib
 matplotlib.use('Agg')
 
 # Get crop parameters dictionary \\\\ Needs to be updated!!!
 
-if exists("D:\\Rabbit Research Videos\\\WP32_Cycle2\\cage_open_dict.json"):
-    with open("D:\\Rabbit Research Videos\\\WP32_Cycle2\\cage_open_dict.json", "r") as f:
+if exists("D:\\Rabbit Research Videos\\\WP32_Cycle3\\cage_open_dict.json"):
+    with open("D:\\Rabbit Research Videos\\\WP32_Cycle3\\cage_open_dict.json", "r") as f:
         cage_open_dict = json.load(f)
 else:
     print('Create cage-open moments dictionary! Else, the feeding series will ignore it')
@@ -57,10 +57,10 @@ def plot_action_diagrams_wp2(arr, apply_savgol_filter=False, filename=None):
     plt.close()
     ## Return void
 
-for dir in sorted(glob.glob('D:\\Rabbit Research Videos\\HPC_Analysis\\WP32_Cycle2\\Action_Diagrams\\C*')):
+for dir in sorted(glob.glob('D:\\Rabbit Research Videos\\HPC_Analysis\\WP32_Cycle3\\Action_Diagrams_Intensity_12\\C*')):
     camera_text = dir.rsplit('\\', 1)[1]
-    action_npy_path = os.path.join('D:\\Rabbit Research Videos\\HPC_Analysis\\WP32_Cycle2\\Action_Diagrams\\', camera_text)
-    action_diagram_path = os.path.join('D:\\Rabbit Research Videos\\HPC_Analysis\\WP32_Cycle2\\Action_Diagrams\\Plots', camera_text)
+    action_npy_path = os.path.join('D:\\Rabbit Research Videos\\HPC_Analysis\\WP32_Cycle3\\Action_Diagrams_Intensity_12\\', camera_text)
+    action_diagram_path = os.path.join('D:\\Rabbit Research Videos\\HPC_Analysis\\WP32_Cycle3\\Action_Diagrams_Intensity_12\\Plots', camera_text)
 
     # Create action diagram directories
     if not os.path.exists(action_diagram_path):
@@ -78,8 +78,8 @@ for dir in sorted(glob.glob('D:\\Rabbit Research Videos\\HPC_Analysis\\WP32_Cycl
             save_loc_filtered = action_diagram_path + '\\' + vid_text + '_filtered.png'
 
             # Plot
-            plot_action_diagrams_wp2(temp_arr, apply_savgol_filter = False, filename = save_loc_nosav)
-            plot_action_diagrams_wp2(temp_arr, apply_savgol_filter = True, filename = save_loc_sav)
+            #plot_action_diagrams_wp2(temp_arr, apply_savgol_filter = False, filename = save_loc_nosav)
+            #plot_action_diagrams_wp2(temp_arr, apply_savgol_filter = True, filename = save_loc_sav)
 
 
             # Filtered array
@@ -87,7 +87,7 @@ for dir in sorted(glob.glob('D:\\Rabbit Research Videos\\HPC_Analysis\\WP32_Cycl
             temp_arr = HPC_optical_flow_filters.expand_intervals(temp_arr, 10, 'max')
             temp_arr = HPC_optical_flow_filters.combine_close_actions(temp_arr, 60)
             temp_arr = HPC_optical_flow_filters.expand_intervals(temp_arr, 0, 'mean')
-            temp_arr[temp_arr < 0.75] = 0
+            temp_arr[temp_arr < 1.2] = 0 # initial value = 0.75
             heat_map_module.numpy_io("write", os.path.join(action_npy_path, (vid_text + '_filtered.npy')), temp_arr)
             plot_action_diagrams_wp2(temp_arr, apply_savgol_filter = False, filename = save_loc_filtered)
 

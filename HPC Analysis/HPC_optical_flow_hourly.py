@@ -14,8 +14,8 @@ from scipy.optimize import curve_fit
 
 # Get crop parameters dictionary
 
-if exists('D:\\Rabbit Research Videos\\WP 3.2\\Analysis\\cage_open_dict.json'):
-    with open('D:\\Rabbit Research Videos\\WP 3.2\\Analysis\\cage_open_dict.json', 'r') as f:
+if exists('D:\\Rabbit Research Videos\\WP32_Cycle3\\cage_open_dict.json'):
+    with open('D:\\Rabbit Research Videos\\WP32_Cycle3\\cage_open_dict.json', 'r') as f:
         cage_open_dict = json.load(f)
 else:
     print('Create cage-open moments dictionary! Else, the feeding series will ignore it')
@@ -51,16 +51,17 @@ def plot_optical_flow_hourly_wp2(arr, time_arr, camera_text, cage_open_dict, app
         ax.plot(x_axis, prediction, "-", color = 'blue', label = 'Exp Trend')
 
     ## Adjust markers and add legend (cage-open)
-    cage_open_arr = cage_open_dict[camera_text]
-    cage_open_x = []
-    cage_open_y = []
-    for time_point in cage_open_arr:
-        date_time_object = pd.to_datetime(time_point, format='%Y%m%d%H%M%S')
-        index = np.where(time_arr == date_time_object)
-        cage_open_x.append(time_arr[index])
-        cage_open_y.append(y_axis[index])
-    ax.plot(cage_open_x, cage_open_y, "s", color = 'crimson', markersize = 10, label = 'Open Cage')
-    plt.legend(prop={'size': 8})
+    if cage_open_dict is not None:
+        cage_open_arr = cage_open_dict[camera_text]
+        cage_open_x = []
+        cage_open_y = []
+        for time_point in cage_open_arr:
+            date_time_object = pd.to_datetime(time_point, format='%Y%m%d%H%M%S')
+            index = np.where(time_arr == date_time_object)
+            cage_open_x.append(time_arr[index])
+            cage_open_y.append(y_axis[index])
+        ax.plot(cage_open_x, cage_open_y, "s", color = 'crimson', markersize = 10, label = 'Open Cage')
+        plt.legend(prop={'size': 8})
 
     ## Edit plot title and labels
     ax.set(xlabel = 'Time', ylabel = 'Count of Seconds', title = 'Action Count of Seconds Chart' + ' (' + camera_text + ')')
@@ -83,9 +84,9 @@ def exp_sin(x, alpha, a, b, c, d):
     return alpha * (np.power(a,(x))+b) * (np.sin(((2*np.pi/24)*x)+c) + d)
 
 # Hourly aggregate filtered arrays
-for dir in sorted(glob.glob('D:\\Rabbit Research Videos\\HPC_Analysis\\WP32\\Action_Diagrams\\C*')):
+for dir in sorted(glob.glob('D:\\Rabbit Research Videos\\HPC_Analysis\\WP32_Cycle3\\Action_Diagrams_Intensity_12\\C*')):
     camera_text = dir.rsplit('\\', 1)[1]
-    action_analysis_path = os.path.join('D:\\Rabbit Research Videos\\HPC_Analysis\\WP32\\Action_Diagrams\\', camera_text)
+    action_analysis_path = os.path.join('D:\\Rabbit Research Videos\\HPC_Analysis\\WP32_Cycle3\\Action_Diagrams_Intensity_12\\', camera_text)
     date_time_list = []
     hourly_action = []
     # Generate time array
@@ -127,14 +128,14 @@ for dir in sorted(glob.glob('D:\\Rabbit Research Videos\\HPC_Analysis\\WP32\\Act
         predictions.append(exp_sin(x,popt[0],popt[1],popt[2], popt[3], popt[4]))
 
     df = pd.DataFrame({'Timestamp': date_time_list, 'Original_Value': hourly_action, 'Savgol_Filter_Value': y_savgol})
-    df.to_csv('D:\\Rabbit Research Videos\\HPC_Analysis\\WP32\\Action_Diagrams\\Hourly_Sequences\\' + camera_text + '.csv')
+    df.to_csv('D:\\Rabbit Research Videos\\HPC_Analysis\\WP32_Cycle3\\Action_Diagrams_Intensity_12\\Hourly_Sequences\\' + camera_text + '.csv')
 
     # Plot and save
-    save_location_reg = 'D:\\Rabbit Research Videos\\HPC_Analysis\\WP32\\Action_Diagrams\\Hourly_Sequences\\' + camera_text + '_plot.jpg'
-    save_location_savgol = 'D:\\Rabbit Research Videos\\HPC_Analysis\\WP32\\Action_Diagrams\\Hourly_Sequences\\' + camera_text + '_savgol_plot.jpg'
+    save_location_reg = 'D:\\Rabbit Research Videos\\HPC_Analysis\\WP32_Cycle3\\Action_Diagrams_Intensity_12\\Hourly_Sequences\\' + camera_text + '_plot.jpg'
+    save_location_savgol = 'D:\\Rabbit Research Videos\\HPC_Analysis\\WP32_Cycle3\\Action_Diagrams_Intensity_12\\Hourly_Sequences\\' + camera_text + '_savgol_plot.jpg'
     plot_optical_flow_hourly_wp2(np.array(hourly_action), np.array(date_time_list),  camera_text,
-                                  cage_open_dict, apply_savgol_filter = False, filename = save_location_reg, prediction = None)
+                                  None, apply_savgol_filter = False, filename = save_location_reg, prediction = None) ## ! Cage open deleted!!!!!!
     plot_optical_flow_hourly_wp2(np.array(hourly_action), np.array(date_time_list),  camera_text,
-                                  cage_open_dict, apply_savgol_filter = True, filename = save_location_savgol, prediction = np.array(predictions))
+                                  None , apply_savgol_filter = True, filename = save_location_savgol, prediction = np.array(predictions)) ## ! Cage open deleted!!!!!!
 
 ## Checkpoint Complete!##

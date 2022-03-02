@@ -12,6 +12,7 @@ np.set_printoptions(threshold=5000)
 def window_noise_removal(arr, window_size):
     arr -= np.min(arr)
     arr[arr < 1] = 0
+    arr[arr == np.inf] = 0
     final_arr = arr.copy()
     for element in np.arange(window_size, len(arr)-window_size):
         sliced_arr = arr[element-window_size:element+window_size+1]

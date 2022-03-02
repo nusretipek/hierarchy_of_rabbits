@@ -1,14 +1,19 @@
 # Import statements
 
-import os
 import glob
 import numpy as np
 import pandas as pd
+import RabbitOOP
 import heat_map_module
 import warnings
+
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-# Video sampling times
+# Global parameters
+
+action_diagram_dir = "D:\\Rabbit Research Videos\\HPC_Analysis\\WP32_Cycle3\\Action_Diagrams\\"
+save_dir = "D:\\Rabbit Research Videos\\HPC_Analysis\\Test"
+file_extension = "\\*filtered.npy"
 sample_bool = False
 times_arr = ['20210810_13',
              '20210810_14',
@@ -107,44 +112,49 @@ times_arr = ['20210810_13',
              '20210820_06',
              '20210820_07']
 
-# Define Output Function
+# Functions
+
 
 def get_action_moments_wp2(arr, vid_name):
     temp_df = pd.DataFrame(columns=["Video_Name", "Action_Start", "Action_End", "Duration", "Intensity"])
     action_indices = np.where(np.diff(arr) != 0)[0]
     if arr[0] > 0:
         action_indices = np.insert(action_indices, 0, 0)
-    if arr[len(arr)-1] > 0:
-        action_indices = np.insert(action_indices, len(action_indices), len(arr)-2)
-    for i in range(int(len(action_indices)/2)):
-        temp_df = temp_df.append({"Video_Name": vid_name,
-                                  "Action_Start": str(int(action_indices[2*i]/60)).zfill(2) + ":" + str(int(action_indices[2*i]%60)).zfill(2),
-                                  "Action_End": str(int(action_indices[(2*i)+1]/60)).zfill(2) + ":" + str(int(action_indices[(2*i)+1]%60)).zfill(2),
-                                  "Duration": int(action_indices[(2*i)+1]) - int(action_indices[2*i]),
-                                  "Intensity": round(arr[action_indices[2*i]+1], 1)}, ignore_index=True)
+    if arr[len(arr) - 1] > 0:
+        action_indices = np.insert(action_indices, len(action_indices), len(arr) - 2)
+    for i in range(int(len(action_indices) / 2)):
+        temp_df = temp_df.append(
+            {"Video_Name": vid_name,
+             "Action_Start": (str(int(action_indices[2 * i] / 60)).zfill(2) + ":" +
+                              str(int(action_indices[2 * i] % 60)).zfill(2)),
+             "Action_End": (str(int(action_indices[(2 * i) + 1] / 60)).zfill(2) + ":" +
+                            str(int(action_indices[(2 * i) + 1] % 60)).zfill(2)),
+             "Duration": int(action_indices[(2 * i) + 1]) - int(action_indices[2 * i]),
+             "Intensity": round(arr[action_indices[2 * i] + 1], 1)
+             }, ignore_index=True)
     return temp_df
 
-for dir in sorted(glob.glob('D:\\Rabbit Research Videos\\HPC_Analysis\\WP32_Cycle3\\Action_Diagrams\\C*')):
-    camera_text = dir.rsplit('\\', 1)[1]
-    action_diagram_path = os.path.join('D:\\Rabbit Research Videos\\HPC_Analysis\\WP32_Cycle3\\Action_Diagrams\\', camera_text)
 
-    # Create action diagram directories
-    if not os.path.exists(action_diagram_path):
-        os.mkdir(action_diagram_path)
+for rabbit_directory_path in sorted(glob.glob(action_diagram_dir + "\\C*")):
+
+    # Create a rabbit directory
+    temp_dir = RabbitOOP.RabbitDirectory(rabbit_directory_path, save_dir)
 
     # Generate action diagrams from 1D numpy arrays
     master_df = pd.DataFrame(columns=["Video_Name", "Action_Start", "Action_End", "Duration", "Intensity"])
-    for action_arr in sorted(glob.glob(action_diagram_path + '\\*filtered.npy')):
-        if '020000' not in action_arr:
-                vid_text = action_arr.rsplit('\\', 1)[1].rsplit('.', 1)[0]
-                if sample_bool:
-                    if (vid_text[6:17] in times_arr):
-                        temp_arr = heat_map_module.numpy_io('read', action_arr)
-                        master_df = master_df.append(get_action_moments_wp2(temp_arr, vid_text.rsplit("_", 1)[0]))
-                else:
-                    temp_arr = heat_map_module.numpy_io('read', action_arr)
-                    master_df = master_df.append(get_action_moments_wp2(temp_arr, vid_text.rsplit("_", 1)[0]))
-    master_df.to_excel('D:\\Rabbit Research Videos\\HPC_Analysis\\WP32_Cycle3\\Action_Diagrams\\Action_Moments_Excel_Recommender\\' + camera_text + '.xlsx',
-                       index=False)
 
-## Checkpoint Complete!##
+    # Get filtered actions and add to the Dataframe
+    for action_arr in sorted(glob.glob(temp_dir.location + file_extension)):
+        if '020000' not in action_arr:
+            temp_file = RabbitOOP.RabbitFile(action_arr)
+            if sample_bool and temp_file.get_time() in times_arr:
+                temp_arr = heat_map_module.numpy_io('read', temp_file.location)
+                master_df = master_df.append(get_action_moments_wp2(temp_arr, temp_file.name.rsplit("_", 1)[0]))
+            elif not sample_bool:
+                temp_arr = heat_map_module.numpy_io('read', temp_file.location)
+                master_df = master_df.append(get_action_moments_wp2(temp_arr, temp_file.name.rsplit("_", 1)[0]))
+
+    # Export master dataframe
+    master_df.to_excel(temp_dir.savePath + ".xlsx", index=False)
+
+# Checkpoint Complete!
