@@ -8,7 +8,6 @@ from DistanceTracker import DistanceTracker
 
 # Define RabbitTracker class
 class RabbitTracker:
-
     # init function
     """
     Takes json file in the format of
@@ -21,6 +20,7 @@ class RabbitTracker:
     Definition of number of objects is necessary and tracker takes power from the prior knowledge of tracks.
     Refer to the Track class for Track objects.
     """
+
     def __init__(self, dict_file, n_obj=4):
 
         self.dict_file = dict_file
@@ -65,6 +65,7 @@ class RabbitTracker:
     Returns:
         List (float) - distance of last_point with respect to the new_points  
     """
+
     @staticmethod
     def calculate_euclidian_distance(last_point, new_points):
         distance_list = []
@@ -82,6 +83,7 @@ class RabbitTracker:
         1. point in format of tuple (x, y) which is closest to the previous given point 
         2. Euclidean distance (float)
     """
+
     @staticmethod
     def get_minimum_distance(distance_list):
         minimum_distance = None
@@ -103,6 +105,7 @@ class RabbitTracker:
         1. point in format of tuple (x, y) which is closest to the previous given prev_point 
         2. Euclidean distance (float)
     """
+
     def get_closest_centroid(self, prev_point, frame):
         minimum_distance = None
         minimum_idx = None
@@ -124,6 +127,7 @@ class RabbitTracker:
     Returns:
         List (Tuple) - the point tuples between prev_point and next_point with len=n_frames
     """
+
     @staticmethod
     def get_extrapolation_between_points(prev_point, next_point, n_frames):
         x_increment = (next_point[0] - prev_point[0]) / (n_frames + 1)
@@ -147,6 +151,7 @@ class RabbitTracker:
     Returns:
         None
     """
+
     def initialize_track(self, doe_id, threshold):
         self.get_track(doe_id).initialize_point_dict(len(self.dict))
 
@@ -190,6 +195,7 @@ class RabbitTracker:
     Returns:
         None
     """
+
     def clean_in_between_occurrences(self, n_frames):
         for track_id in range(self.n_obj):
             track_point_dict = self.get_track(track_id).point_dict
@@ -219,6 +225,7 @@ class RabbitTracker:
         None
         * Prints the golden points for debugging
     """
+
     def get_gold_key_points(self):
         for point in self.dict:
             point_bool = True
@@ -240,6 +247,7 @@ class RabbitTracker:
         None
         * Manipulates track objects directly
     """
+
     def fix_silver_key_points(self):
         for point in self.dict:
             silver_count = 0
@@ -269,6 +277,7 @@ class RabbitTracker:
     Returns:
         List (uint) - frame id of first certain points per track, len = number of tracks
     """
+
     # Fill initial frames
     def get_initial_points(self):
         initial_points = {}
@@ -292,6 +301,7 @@ class RabbitTracker:
         1. List of tuples (points in format of (x,y)) that is the best track associated with given animal id
         2. Dictionary of updated centroids
     """
+
     def get_closest_initial_track(self, centroid_dict, doe_id, unfounded_count):
         distance_tracker_obj = DistanceTracker({}, n_obj=self.n_obj)
         point_dict = self.get_initial_points()
@@ -369,6 +379,7 @@ class RabbitTracker:
         None
         * Manipulates track objects directly
     """
+
     def _fill_initial_points(self):
         initial_points_dict = self.get_initial_points()
         initial_centroid_dict = {}
@@ -430,6 +441,7 @@ class RabbitTracker:
     Returns:
         List (uint) - frame id of final certain points per track, len = number of tracks
     """
+
     def get_final_points(self):
         final_points = {}
         for track_id in range(self.n_obj):
@@ -453,6 +465,7 @@ class RabbitTracker:
             {'Track ID': tuple point (x,y),...}
         * Manipulates track objects directly
     """
+
     def _fill_final_points(self):
         final_points_dict = self.get_final_points()
         while len(final_points_dict) > 0:
@@ -483,11 +496,11 @@ class RabbitTracker:
        the candidate tracks generated with Distance Tracker, function returns to the list of points else returns None.  
     Params:
         initial_frame: initial frame number to start distance based tracking algorithm (integer)
-        final_frame: final frame number to stop distance based tracking algorithm (integer)
+        final_frame: final frame number to stop distance based tracking algorithm (integer) > initial_frame
         doe_id: animal identification number (uint8) with domain = [0, inf)
     Returns:
         List of tuples (points in format of (x,y)) that is the best candidate track associated with given animal id
-            OR None (if no candiate track can be validated) 
+            OR None (if no candidate track can be validated) 
     """
     def _find_candidate_track(self, initial_frame, final_frame, doe_id):
         partial_dict = {}
@@ -551,6 +564,16 @@ class RabbitTracker:
                         return distance_tracker.get_track(track_idx)[1:]
             return None
 
+    # Fill the in between points where candidate track can be found
+    """
+    Computes: 
+       Loop over every Track object and fill it with not None candidate track using _find_candidate_track() function.
+    Params:
+        None
+    Returns:
+        None
+        * Manipulates track objects directly
+    """
     def fill_in_between_unknown_single(self):
         for track_id in range(self.n_obj):
             track_point_dict = self.get_track(track_id).point_dict
@@ -570,7 +593,20 @@ class RabbitTracker:
                                                                             track[in_between_key][1])
                         prev_key = key
 
-    # fill in-between classified
+    # Fill in-between classified anchor points with candidate track and linear interpolation
+    """
+    Computes: 
+       For a given animal id within domain of [0,...,n_obj-1], fill points in between of anchor points identified
+       using the classification model. The classification points act as re-identification moments and in-between points
+       are uncertain. The function tries to find a candidate track using Distance-based tracker, if returns None, it
+       interpolates linearly between two anchor points. Lastly, if the consecutive points are spatially close, 
+       fill in-between with previous valid point and confidence. 
+    Params:
+        doe_id: animal id number (uint8)
+    Returns:
+        None
+        * Manipulates track objects directly
+    """
     def fill_in_between_classified_points(self, doe_id):
         track_point_dict = self.get_track(doe_id).point_dict
         prev_valid_frame = None
@@ -625,7 +661,25 @@ class RabbitTracker:
                 else:
                     lost_count += 1
 
-    # Distance based candidate tracks
+    # Find candidate track based on Distance tracker - initial and final point enhancement
+    """
+    Computes: 
+       The fusion of classification (re-identification) of objects and distance of tracks with respective to objects
+       happens in the computation. Based on coordinates of a tracks generated between custom frames, the
+       animal is validated with classification probability ratios of both single track and multi-track.
+       A simple sum of these two validation ratios needs to be larger than 1 to return a candidate track.
+       If a validated match found among the candidate tracks generated with Distance Tracker, 
+       function returns to the list of points else returns None.  
+    Params:
+        initial_frame: initial frame number to start distance based tracking algorithm (integer)
+        final_frame: final frame number to stop distance based tracking algorithm (integer) > initial_frame
+        initial_point: point in format of tuple (x,y) from a track 
+        final_point: point in format of tuple (x,y) from a track 
+        doe_id: animal identification number (uint8) with domain = [0, inf)
+    Returns:
+        List of tuples (points in format of (x,y)) that is the best candidate track associated with given animal id
+            OR None (if no candidate track can be validated) 
+    """
     def find_candidate_track(self, initial_frame, final_frame, initial_point, final_point, doe_id):
         partial_dict = {}
         for idx in range(initial_frame, final_frame):
@@ -641,7 +695,7 @@ class RabbitTracker:
             initial_point_dist = distance.euclidean(initial_point, distance_tracker.get_track(track_id)[1][0])
             final_point_dist = distance.euclidean(final_point, distance_tracker.get_track(track_id)[-2][0])
             combined_dist = initial_point_dist + final_point_dist
-            combined_dist += combined_dist  # DELETE LATER
+            combined_dist += combined_dist  # Obsolete
             candidate_prob = self.validate_candidate_track(partial_dict,
                                                            distance_tracker.get_track(track_id)[1:],
                                                            doe_id)
@@ -672,6 +726,17 @@ class RabbitTracker:
         else:
             return None
 
+    # Validation of candidate track based on Distance tracker
+    """
+    Computes: 
+       Computes the ratio of sum(classification scores | doe_id) and total number of the animal is identified
+    Params:
+        track_dict: sub-dictionary of original dictionary attribute for given frames in find_candidate_track()
+        track: List of tuples (points in format of (x,y)) 
+        doe_id: animal identification number (uint8) with domain = [0, inf)
+    Returns:
+        Normalised float number OR 0 (to avoid zeroDivide error) 
+    """
     def validate_candidate_track(self, track_dict, track, doe_id):
         sum_class = 0.0
         count = 0
@@ -687,6 +752,17 @@ class RabbitTracker:
         else:
             return sum_class / count
 
+    # Stabilization of candidate track based on Distance tracker
+    """
+    Computes: 
+       Stabilize the given track with respect to the point and confidence values. 
+    Params:
+        track_dict: sub-dictionary of original dictionary attribute for given frames in find_candidate_track()
+        track: List of tuples (points in format of (x,y)) 
+        doe_id: animal identification number (uint8) with domain = [0, inf)
+    Returns:
+        List of tuples (points in format of (x,y)) 
+    """
     def stabilize_candidate_track(self, track_dict, track, doe_id):
         final_track = track.copy()
         prev_valid_point = None
@@ -731,6 +807,18 @@ class RabbitTracker:
         final_track = self.clean_candidate_track(final_track, 2, 2)
         return final_track
 
+    # Alteration of invalid points from candidate track based on Distance tracker
+    """
+    Computes: 
+       Cleans the candidate track from (-1, -1) points or points with 0 confidence attached. It assigns previous
+       valid point and confidence in such occasions.
+    Params:
+        track: List of tuples (points in format of (x,y)) 
+        min_prev: minimum previous count of invalid points
+        min_lead: minimum next count of invalid points
+    Returns:
+        List of tuples (points in format of (x,y)) 
+    """
     @staticmethod
     def clean_candidate_track(track, min_prev, min_lead):
         prev_broken_count = 0
@@ -755,6 +843,17 @@ class RabbitTracker:
 
         return track
 
+    # Alteration of invalid points from candidate track based on Distance tracker
+    """
+    Computes: 
+       Stabilize the tracks in batch operation using spatial proximity of consecutive point assignments.
+    Params:
+        window: integer value of window of frames to stabilize with domain = [0, len(self.dict))
+        dist_threshold: float number that defines stabilization proximity
+    Returns:
+        None
+        * Manipulates track objects directly
+    """
     def stabilize_tracks(self, window, dist_threshold):
         for track_id in range(self.n_obj):
             track_point_dict = self.get_track(track_id).point_dict
@@ -823,7 +922,7 @@ class RabbitTracker:
                                     self.get_track(track_id).add_point(idx, track_point_dict[str(prev_key)]['point'])
                                     self.get_track(track_id).add_confidence(idx, track_point_dict[str(prev_key)][
                                         'confidence'])
-                        prev_key = int(key)-1
+                        prev_key = int(key) - 1
         # separate overlapping tracks
         self.separate_overlapping_tracks()
 
@@ -836,7 +935,7 @@ class RabbitTracker:
             temp_other_track = None
             for key in track_point_dict:
                 overlap_bool = False
-                for other_track_id in range(self.n_obj)[track_id+1:]:
+                for other_track_id in range(self.n_obj)[track_id + 1:]:
                     if int(key) != 0:
                         initial_minus_one_point = track_point_dict[str(int(key) - 1)]['point']
                         other_minus_one_point = self.get_track(other_track_id).point_dict[str(int(key) - 1)]['point']
@@ -851,19 +950,21 @@ class RabbitTracker:
                                 overlap_bool = True
                                 temp_other_track = other_track_id
                 if overlap_count > 0 and not overlap_bool:
-                    avg_point = ((track_point_dict[str(int(key)-overlap_count)]['point'][0] +
-                                 self.get_track(temp_other_track).point_dict[str(int(key)-overlap_count)]['point'][0])
+                    avg_point = ((track_point_dict[str(int(key) - overlap_count)]['point'][0] +
+                                  self.get_track(temp_other_track).point_dict[str(int(key) - overlap_count)]['point'][
+                                      0])
                                  / 2,
                                  (track_point_dict[str(int(key) - overlap_count)]['point'][1] +
-                                  self.get_track(temp_other_track).point_dict[str(int(key)-overlap_count)]['point'][1])
+                                  self.get_track(temp_other_track).point_dict[str(int(key) - overlap_count)]['point'][
+                                      1])
                                  / 2)
                     avg_dist_p = ((distance.euclidean(avg_point,
-                                                      track_point_dict[str(int(key)-overlap_count-1)]['point']) +
-                                  distance.euclidean(avg_point,
-                                                     track_point_dict[str(int(key)+1)]['point'])) / 2)
+                                                      track_point_dict[str(int(key) - overlap_count - 1)]['point']) +
+                                   distance.euclidean(avg_point,
+                                                      track_point_dict[str(int(key) + 1)]['point'])) / 2)
                     avg_dist_o = ((distance.euclidean(avg_point, self.get_track(temp_other_track).point_dict[
-                        str(int(key)-overlap_count-1)]['point']) + distance.euclidean(
-                        avg_point, self.get_track(temp_other_track).point_dict[str(int(key)+1)]['point'])) / 2)
+                        str(int(key) - overlap_count - 1)]['point']) + distance.euclidean(
+                        avg_point, self.get_track(temp_other_track).point_dict[str(int(key) + 1)]['point'])) / 2)
 
                     p_track_b = self.find_nearest_certain_point(track_id, int(key) - overlap_count, 'backward')
                     o_track_b = self.find_nearest_certain_point(temp_other_track, int(key) - overlap_count, 'backward')
@@ -871,35 +972,35 @@ class RabbitTracker:
                     o_track_f = self.find_nearest_certain_point(temp_other_track, int(key), 'forward')
 
                     if verbose:
-                        print('Overlapping between ', int(key)-overlap_count, 'and', key)
+                        print('Overlapping between ', int(key) - overlap_count, 'and', key)
                         print('Prev_Location of Track (', track_id, '): ',
-                              track_point_dict[str(int(key)-overlap_count-1)]['point'])
+                              track_point_dict[str(int(key) - overlap_count - 1)]['point'])
                         print('Prev_Location of Track (', temp_other_track, '): ',
-                              self.get_track(temp_other_track).point_dict[str(int(key)-overlap_count-1)]['point'])
+                              self.get_track(temp_other_track).point_dict[str(int(key) - overlap_count - 1)]['point'])
                         print('Location of Track (', track_id, '): ',
-                              track_point_dict[str(int(key)-overlap_count)]['point'])
+                              track_point_dict[str(int(key) - overlap_count)]['point'])
                         print('Location of Track (', temp_other_track, '): ',
-                              self.get_track(temp_other_track).point_dict[str(int(key)-overlap_count)]['point'])
+                              self.get_track(temp_other_track).point_dict[str(int(key) - overlap_count)]['point'])
                         print('Next_Location of Track (', track_id, '): ',
-                              track_point_dict[str(int(key)+1)]['point'])
+                              track_point_dict[str(int(key) + 1)]['point'])
                         print('Next_Location of Track (', temp_other_track, '): ',
-                              self.get_track(temp_other_track).point_dict[str(int(key)+1)]['point'])
+                              self.get_track(temp_other_track).point_dict[str(int(key) + 1)]['point'])
                         print('----------')
                         print(avg_dist_p)
                         print(avg_dist_o)
                         print('----------')
                         print(p_track_b, o_track_b, p_track_f, o_track_f)
-                        print(track_point_dict[str(int(key)-overlap_count)]['confidence'])
+                        print(track_point_dict[str(int(key) - overlap_count)]['confidence'])
                         print('----------')
 
                     if avg_dist_p > avg_dist_o:
                         self.fix_assignment_of_tracks(track_id,
-                                                      int(key)-overlap_count-p_track_b,
-                                                      int(key)+p_track_f)
+                                                      int(key) - overlap_count - p_track_b,
+                                                      int(key) + p_track_f)
                     else:
                         self.fix_assignment_of_tracks(temp_other_track,
-                                                      int(key)-overlap_count-o_track_b,
-                                                      int(key)+o_track_f)
+                                                      int(key) - overlap_count - o_track_b,
+                                                      int(key) + o_track_f)
 
                     overlap_count = 0
 
@@ -918,17 +1019,17 @@ class RabbitTracker:
 
     def fix_assignment_of_tracks(self, track_id, start_frame, end_frame, verbose=False):
         track_point_dict = self.get_track(track_id).point_dict
-        ext_arr = self.get_extrapolation_between_points(track_point_dict[str(start_frame-1)]['point'],
-                                                        track_point_dict[str(end_frame+1)]['point'],
-                                                        end_frame-start_frame)
+        ext_arr = self.get_extrapolation_between_points(track_point_dict[str(start_frame - 1)]['point'],
+                                                        track_point_dict[str(end_frame + 1)]['point'],
+                                                        end_frame - start_frame)
         for idx in range(start_frame, end_frame):
-            self.get_track(track_id).add_point(idx, ext_arr[idx-start_frame])
+            self.get_track(track_id).add_point(idx, ext_arr[idx - start_frame])
             self.get_track(track_id).add_confidence(idx, 0.8)
 
         if verbose:
             print('++++++++++++++')
             track_point_dict = self.get_track(track_id).point_dict
-            for idx in range(start_frame-1, end_frame+1):
+            for idx in range(start_frame - 1, end_frame + 1):
                 print(track_point_dict[str(idx)])
             print('++++++++++++++')
 
@@ -961,8 +1062,3 @@ class RabbitTracker:
 
         # final layer of stabilization of tracks
         self.last_stabilization_filter()
-
-
-
-
-
