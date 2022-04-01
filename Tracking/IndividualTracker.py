@@ -289,7 +289,7 @@ class RabbitTracker:
         doe_id: animal identification number (uint8) with domain = [0, inf)
         unfounded_count = integer (uint8) representing count objects that have been not initialized at frame 0
     Returns:
-        1. List of tuples (points in format of (x,y) that is the best track associated with given animal id
+        1. List of tuples (points in format of (x,y)) that is the best track associated with given animal id
         2. Dictionary of updated centroids
     """
     def get_closest_initial_track(self, centroid_dict, doe_id, unfounded_count):
@@ -474,8 +474,21 @@ class RabbitTracker:
             del final_points_dict[max_final_track]
         return final_points_dict
 
-    # fill in between frames
-
+    # find candidate track based on Distance tracker
+    """
+    Computes: 
+       The fusion of classification (re-identification) of objects and distance of tracks with respective to objects
+       happens in the computation. Based on median coordinates of a tracks generated between custom frames, the
+       animal is validated with found track distance and lost number of frames. If a validated match found among
+       the candidate tracks generated with Distance Tracker, function returns to the list of points else returns None.  
+    Params:
+        initial_frame: initial frame number to start distance based tracking algorithm (integer)
+        final_frame: final frame number to stop distance based tracking algorithm (integer)
+        doe_id: animal identification number (uint8) with domain = [0, inf)
+    Returns:
+        List of tuples (points in format of (x,y)) that is the best candidate track associated with given animal id
+            OR None (if no candiate track can be validated) 
+    """
     def _find_candidate_track(self, initial_frame, final_frame, doe_id):
         partial_dict = {}
         for idx in range(initial_frame, final_frame + 1):
