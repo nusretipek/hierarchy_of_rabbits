@@ -1019,13 +1019,10 @@ class RabbitTracker:
                               track_point_dict[str(int(key) + 1)]['point'])
                         print('Next_Location of Track (', temp_other_track, '): ',
                               self.get_track(temp_other_track).point_dict[str(int(key) + 1)]['point'])
-                        print('----------')
                         print(avg_dist_p)
                         print(avg_dist_o)
-                        print('----------')
                         print(p_track_b, o_track_b, p_track_f, o_track_f)
                         print(track_point_dict[str(int(key) - overlap_count)]['confidence'])
-                        print('----------')
 
                     if avg_dist_p > avg_dist_o:
                         self.fix_assignment_of_tracks(track_id,
@@ -1086,11 +1083,9 @@ class RabbitTracker:
             self.get_track(track_id).add_confidence(idx, 0.8)
 
         if verbose:
-            print('++++++++++++++')
             track_point_dict = self.get_track(track_id).point_dict
             for idx in range(start_frame - 1, end_frame + 1):
                 print(track_point_dict[str(idx)])
-            print('++++++++++++++')
 
     # Main function to track rabbits
     """
