@@ -880,6 +880,18 @@ class RabbitTracker:
                         if initial_dist < 5:
                             self.get_track(track_id).add_point(int(key) + 1, track_point_dict[key]['point'])
 
+    # Avoid overlapping assignment (Perfect overlap)
+    """
+    Computes: 
+       Clears the exactly overlapping tracks. Some of the fill in between tracks assign same animal for a short
+       duration to the more than single track. To avoid this exact assignment, the function calculates the most likely
+       track for the animal by checking step-1 locations
+    Params:
+        None
+    Returns:
+        None
+        * Manipulates track objects directly
+    """
     def avoid_overlapping_assignment(self):
         for track_id in range(self.n_obj):
             other_tracks = list(range(self.n_obj))
@@ -904,6 +916,18 @@ class RabbitTracker:
                                                                          self.get_track(other_track_id).point_dict[
                                                                              str(int(key) - 1)]['point'])
 
+    # Filter volatile track movements and separate close tracks
+    """
+    Computes: 
+        Avoids the rapid shifts from the tracks that are unnatural in sense. Secondly, separate_overlapping_tracks()
+        is used to avoid assignment of tracks within perimeter of other tracks. This computation is used for last 
+        filtration of tracks proposed
+    Params:
+        None
+    Returns:
+        None
+        * Manipulates track objects directly
+    """
     def last_stabilization_filter(self):
         # avoid swapping
         for track_id in range(self.n_obj):
@@ -923,10 +947,20 @@ class RabbitTracker:
                                     self.get_track(track_id).add_confidence(idx, track_point_dict[str(prev_key)][
                                         'confidence'])
                         prev_key = int(key) - 1
+
         # separate overlapping tracks
         self.separate_overlapping_tracks()
 
     # Separation of overlapping tracks due to wrong classification
+    """
+    Computes: 
+       Separate the tracks that are too close to each other due to errors induced by filling functions. It is used as a
+       last resort to correct and stabilize the tracks.
+    Params:
+        verbose: Boolean for printing debug information
+    Returns:
+        None
+    """
     def separate_overlapping_tracks(self, verbose=False):
         for track_id in range(self.n_obj):
             track_point_dict = self.get_track(track_id).point_dict
@@ -1005,6 +1039,17 @@ class RabbitTracker:
                     overlap_count = 0
 
     # Helper functions for separation of identified tracks
+    """
+    Computes: 
+       Find the nearest certain point to assign while separating the tracks. This is a helper function to be used
+       in the separate_overlapping_tracks()
+    Params:
+        track_id: ID of the track corresponding with the doe_id. Integer with domain of 0 to self.n_obj-1
+        key: frame number. Integer with domain of 0 to len(self.dict)
+        method: search method from given frame number (key). String with options: 'forward' and 'backward'
+    Returns:
+        c: count of frames to reach certain assignment of a given track (int)
+    """
     def find_nearest_certain_point(self, track_id, key, method):
         c = 1
         track_point_dict = self.get_track(track_id).point_dict
@@ -1017,6 +1062,20 @@ class RabbitTracker:
                 c += 1
             return c
 
+    # Helper functions for separation of tracks by manipulation of tracks
+    """
+    Computes: 
+        Helper function to fix the assignment of tracks while using the separation function. It corrects the wrong 
+        assigned track and called within separate_overlapping_tracks().
+    Params:
+        track_id: ID of the track corresponding with the doe_id. Integer with domain of 0 to self.n_obj-1
+        start_frame: starting frame number to fix the track. Integer with domain of 0 to len(self.dict)-1
+        end_frame: ending frame number to fix the track. Integer with domain of 0 to len(self.dict)-1
+        verbose: Boolean for printing debug information
+    Returns:
+        None
+        * Manipulates track objects directly
+    """
     def fix_assignment_of_tracks(self, track_id, start_frame, end_frame, verbose=False):
         track_point_dict = self.get_track(track_id).point_dict
         ext_arr = self.get_extrapolation_between_points(track_point_dict[str(start_frame - 1)]['point'],
@@ -1033,7 +1092,17 @@ class RabbitTracker:
                 print(track_point_dict[str(idx)])
             print('++++++++++++++')
 
-    # main function to track rabbits
+    # Main function to track rabbits
+    """
+    Computes: 
+        Main generative function for tracks after a class object creation given the threshold for classifications to
+        build assign initial points. It calls above declared functions sequentially.
+    Params:
+        threshold: Threshold to accept probabilities from the classification model to assign animals within a track.
+                   Float number with domain of 0 to 1.
+    Returns:
+        None
+    """
     def generate_tracks(self, threshold):
         # initialize tracks
         for track_id in range(self.n_obj):
