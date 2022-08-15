@@ -26,15 +26,16 @@ resize_param_high_h = 0
 
 for key in camera_groups:
     for camera in camera_groups[key]:
-        heat_map_location = os.path.join('/media/nipek/My Book/Rabbit Research Videos/WP 3.2/Analysis/Master_Heatmaps/72_Hours', camera)
+        heat_map_location = os.path.join(
+            '/media/nipek/My Book/Rabbit Research Videos/WP 3.2/Analysis/Master_Heatmaps/72_Hours', camera)
         temp_arr = heat_map_module.numpy_io('read', heat_map_location + '.npy')
-        if (temp_arr.shape[0] < resize_param_low_h):
-            resize_param_low_h  = temp_arr.shape[0]
-        if (temp_arr.shape[0] > resize_param_high_h):
+        if temp_arr.shape[0] < resize_param_low_h:
+            resize_param_low_h = temp_arr.shape[0]
+        if temp_arr.shape[0] > resize_param_high_h:
             resize_param_high_h = temp_arr.shape[0]
-        if (temp_arr.shape[1] < resize_param_low_w):
+        if temp_arr.shape[1] < resize_param_low_w:
             resize_param_low_w = temp_arr.shape[1]
-        if (temp_arr.shape[1] > resize_param_high_w):
+        if temp_arr.shape[1] > resize_param_high_w:
             resize_param_high_w = temp_arr.shape[1]
 
 print(resize_param_low_h, resize_param_high_h)
@@ -50,7 +51,8 @@ for key in camera_groups:
     for camera in camera_groups[key]:
 
         # Read master heat maps
-        heat_map_location = os.path.join('/media/nipek/My Book/Rabbit Research Videos/WP 3.2/Analysis/Master_Heatmaps/72_Hours', camera)
+        heat_map_location = os.path.join(
+            '/media/nipek/My Book/Rabbit Research Videos/WP 3.2/Analysis/Master_Heatmaps/72_Hours', camera)
         temp_arr = heat_map_module.numpy_io('read', heat_map_location + '.npy')
 
         # Rotate if necessary
@@ -61,7 +63,7 @@ for key in camera_groups:
         temp_arr_resized = resize(temp_arr, (resize_param_low_h, resize_param_low_w))
 
         # Add heatmaps
-        if (aggregate_arr is None):
+        if aggregate_arr is None:
             aggregate_arr = temp_arr_resized
         else:
             aggregate_arr += temp_arr_resized
@@ -74,7 +76,7 @@ for key in camera_groups:
     aggregate_arr /= counter
     save_folder_location = '/media/nipek/My Book/Rabbit Research Videos/WP 3.2/Analysis/Master_Heatmaps/72_Hours_Difference/Low_Resize'
     heat_map_module.numpy_io('write', os.path.join(save_folder_location, (key + '_mean.npy')), aggregate_arr)
-    cv2.imwrite(os.path.join(save_folder_location, (key + '_mean.png')), aggregate_arr*255)
+    cv2.imwrite(os.path.join(save_folder_location, (key + '_mean.png')), aggregate_arr * 255)
 
 ## High Resize
 
@@ -84,7 +86,8 @@ for key in camera_groups:
     for camera in camera_groups[key]:
 
         # Read master heat maps
-        heat_map_location = os.path.join('/media/nipek/My Book/Rabbit Research Videos/WP 3.2/Analysis/Master_Heatmaps/72_Hours', camera)
+        heat_map_location = os.path.join(
+            '/media/nipek/My Book/Rabbit Research Videos/WP 3.2/Analysis/Master_Heatmaps/72_Hours', camera)
         temp_arr = heat_map_module.numpy_io('read', heat_map_location + '.npy')
 
         # Rotate if necessary
@@ -95,7 +98,7 @@ for key in camera_groups:
         temp_arr_resized = resize(temp_arr, (resize_param_high_h, resize_param_high_w))
 
         # Add heatmaps
-        if (aggregate_arr is None):
+        if aggregate_arr is None:
             aggregate_arr = temp_arr_resized
         else:
             aggregate_arr += temp_arr_resized
@@ -108,7 +111,7 @@ for key in camera_groups:
     aggregate_arr /= counter
     save_folder_location = '/media/nipek/My Book/Rabbit Research Videos/WP 3.2/Analysis/Master_Heatmaps/72_Hours_Difference/High_Resize'
     heat_map_module.numpy_io('write', os.path.join(save_folder_location, (key + '_mean.npy')), aggregate_arr)
-    cv2.imwrite(os.path.join(save_folder_location, (key + '_mean.png')), aggregate_arr*255)
+    cv2.imwrite(os.path.join(save_folder_location, (key + '_mean.png')), aggregate_arr * 255)
 
 # Difference heatmaps
 save_folder_location_low = '/media/nipek/My Book/Rabbit Research Videos/WP 3.2/Analysis/Master_Heatmaps/72_Hours_Difference/Low_Resize'
@@ -134,12 +137,13 @@ for pair in low_combiniations:
 
     # Difference operation
     diff_arr = np.abs(temp_arr_1 - temp_arr_2)
-    diff_arr[diff_arr <= 0.25]  = 0
-    diff_arr[diff_arr >= 0.25]  = 1
+    diff_arr[diff_arr <= 0.25] = 0
+    diff_arr[diff_arr >= 0.25] = 1
 
-    unique_save_name = pair[0].rsplit('/', 1)[1].rsplit('.', 1)[0].rsplit('_', 1)[0] + "_and_"  + pair[1].rsplit('/', 1)[1].rsplit('.', 1)[0].rsplit('_', 1)[0]
-    heat_map_module.numpy_io('write', os.path.join(save_folder_location_low_diff, (unique_save_name + '.npy')), diff_arr)
-    cv2.imwrite(os.path.join(save_folder_location_low_diff, (unique_save_name + '.png')), diff_arr*255)
+    unique_save_name = pair[0].rsplit('/', 1)[1].rsplit('.', 1)[0].rsplit('_', 1)[0] + "_and_" + pair[1].rsplit('/', 1)[1].rsplit('.', 1)[0].rsplit('_', 1)[0]
+    heat_map_module.numpy_io('write', os.path.join(save_folder_location_low_diff, (unique_save_name + '.npy')),
+                             diff_arr)
+    cv2.imwrite(os.path.join(save_folder_location_low_diff, (unique_save_name + '.png')), diff_arr * 255)
 
 for pair in high_combiniations:
     temp_arr_1 = heat_map_module.numpy_io('read', pair[0])
@@ -147,11 +151,12 @@ for pair in high_combiniations:
 
     # Difference operation
     diff_arr = np.abs(temp_arr_1 - temp_arr_2)
-    diff_arr[diff_arr <= 0.25]  = 0
-    diff_arr[diff_arr >= 0.25]  = 1
+    diff_arr[diff_arr <= 0.25] = 0
+    diff_arr[diff_arr >= 0.25] = 1
 
-    unique_save_name = pair[0].rsplit('/', 1)[1].rsplit('.', 1)[0].rsplit('_', 1)[0] + "_and_"  + pair[1].rsplit('/', 1)[1].rsplit('.', 1)[0].rsplit('_', 1)[0]
-    heat_map_module.numpy_io('write', os.path.join(save_folder_location_high_diff, (unique_save_name + '.npy')), diff_arr)
-    cv2.imwrite(os.path.join(save_folder_location_high_diff, (unique_save_name + '.png')), diff_arr*255)
+    unique_save_name = pair[0].rsplit('/', 1)[1].rsplit('.', 1)[0].rsplit('_', 1)[0] + "_and_" + pair[1].rsplit('/', 1)[1].rsplit('.', 1)[0].rsplit('_', 1)[0]
+    heat_map_module.numpy_io('write', os.path.join(save_folder_location_high_diff, (unique_save_name + '.npy')),
+                             diff_arr)
+    cv2.imwrite(os.path.join(save_folder_location_high_diff, (unique_save_name + '.png')), diff_arr * 255)
 
 ## Checkpoint Complete!##

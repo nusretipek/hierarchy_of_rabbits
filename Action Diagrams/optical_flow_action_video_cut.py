@@ -1,5 +1,4 @@
 # Import statements
-
 import os
 from os.path import exists
 import glob

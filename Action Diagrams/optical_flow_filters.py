@@ -1,18 +1,11 @@
 # Import statements
-
-import os
-from os.path import exists
-import glob
-import time
-import json
 import numpy as np
-import heat_map_module
-import cv2
 import pandas as pd
 import matplotlib.dates as md
 from scipy.signal import savgol_filter
 import matplotlib.pyplot as plt
 np.set_printoptions(threshold=5000)
+
 
 # Functions
 
@@ -29,27 +22,29 @@ def window_noise_removal(arr, window_size):
     final_arr[final_arr < 0.5] = 0
     return final_arr
 
+
 def expand_intervals(arr, expansion_size, operation):
     final_arr = arr.copy()
     next_non_zero = 0
     prev_index = 0
-    for index in range(expansion_size,len(arr) - expansion_size):
-        if (prev_index+next_non_zero+expansion_size > index):
+    for index in range(expansion_size, len(arr) - expansion_size):
+        if prev_index+next_non_zero+expansion_size > index:
             continue
-        if (arr[index] > 0):
+        if arr[index] > 0:
             next_non_zero = 0
-            while((index+next_non_zero) < (len(arr) - expansion_size) and arr[index + next_non_zero] != 0):
+            while (index + next_non_zero) < (len(arr) - expansion_size) and arr[index + next_non_zero] != 0:
                 next_non_zero += 1
             if operation == 'max':
                 slice_value = np.max(arr[index:index+next_non_zero])
             if operation == 'mean':
                 slice_value = np.mean(arr[index:index+next_non_zero])
-            if (index+next_non_zero+expansion_size < len(final_arr)):
-                final_arr[index-expansion_size:index+next_non_zero+expansion_size] = np.repeat(slice_value,2*expansion_size+next_non_zero)
+            if index+next_non_zero+expansion_size < len(final_arr):
+                final_arr[index-expansion_size:index+next_non_zero+expansion_size] = np.repeat(slice_value, 2 * expansion_size + next_non_zero)
             else:
                 final_arr[index-expansion_size:len(arr)] = np.repeat(slice_value, len(arr)-(index-expansion_size))
             prev_index = index
     return final_arr
+
 
 def combine_close_actions(arr, window):
     final_arr = arr.copy()
@@ -60,40 +55,6 @@ def combine_close_actions(arr, window):
         final_arr[non_zero_indices[0][element]:non_zero_indices[0][element+1]] = np.repeat(slice_max, non_zero_indices[0][element+1]-non_zero_indices[0][element])
     return final_arr
 
-def get_index_slices(arr):
-    final_arr = np.repeat(0, arr.shape[0])
-    zeros_np = np.repeat(0, number_of_zeroes)
-    index_list = [i for i in range(0, len(arr)-number_of_zeroes) if list(arr[i:i+number_of_zeroes])!=list(zeros_np)]
-    index_diff = np.diff(np.array(index_list))
-    start_point = index_list[0]
-    for element in np.where(index_diff > 10)[0]:
-        end_point = index_list[element]
-        final_arr[start_point:end_point] = np.repeat(np.median(arr[start_point:index_list[element]]), end_point-start_point)
-        start_point = index_list[element+1]
-    if 3599-number_of_zeroes in index_list:
-        final_arr[start_point:3599] = np.repeat(np.median(arr[start_point:3599]), 3599-start_point)
-    else:
-        final_arr[start_point:index_list[-1]] = np.repeat(np.median(arr[start_point:index_list[-1]]), index_list[-1]-start_point)
-    return final_arr
-
-def combine_drop_spikes(arr, window):
-    arr = final_arr.copy()
-    next_non_zero = 0
-    prev_index = 0
-    for index in range(0,len(arr)):
-        if (prev_index+next_non_zero > index):
-            continue
-        if (arr[index] > 0):
-            while((index + next_non_zero) < len(arr) and arr[index + next_non_zero] != 0):
-                next_non_zero += 1
-            slice_max = np.max(arr[index:index+next_non_zero])
-            if (index+next_non_zero < len(final_arr)):
-                final_arr[index:index+next_non_zero] = np.repeat(slice_max,next_non_zero)
-            else:
-                final_arr[index:len(arr)] = np.repeat(slice_max, len(arr)-(index))
-            prev_index = index
-        next_non_zero = 0
-    return final_arr
 
 def plot_action_diagrams_wp2(arr, apply_savgol_filter=False, filename=None):
 
@@ -126,18 +87,7 @@ def plot_action_diagrams_wp2(arr, apply_savgol_filter=False, filename=None):
     else:
         plt.show()
     plt.close()
+
     ## Return void
-
-#vid_numpy_loc = '/media/nipek/My Book/Rabbit Research Videos/WP 3.2/Analysis/Action_Diagrams/Camera 1/kon01.20210630_050000.npy'
-#temp_arr = heat_map_module.numpy_io('read', vid_numpy_loc)
-#temp_arr = window_noise_removal(temp_arr, 3)
-#plot_action_diagrams_wp2(temp_arr, apply_savgol_filter=False, filename=None)
-
-#temp_arr = expand_intervals(temp_arr, 10, 'max')
-#temp_arr = combine_close_actions(temp_arr, 60)
-#temp_arr = expand_intervals(temp_arr, 0, 'mean')
-#plot_action_diagrams_wp2(temp_arr, apply_savgol_filter=False, filename=None)
-#temp_arr[temp_arr < 0.5] = 0
-#plot_action_diagrams_wp2(temp_arr, apply_savgol_filter=False, filename=None)
 
 ## Checkpoint Complete!##

@@ -9,7 +9,7 @@ import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 # Video sampling times
-sample_bool = False
+sample_bool = True
 times_arr = ['20210810_13',
              '20210810_14',
              '20210810_15',
@@ -117,16 +117,17 @@ def get_action_moments_wp2(arr, vid_name):
     if arr[len(arr)-1] > 0:
         action_indices = np.insert(action_indices, len(action_indices), len(arr)-2)
     for i in range(int(len(action_indices)/2)):
-        temp_df = temp_df.append({"Video_Name": vid_name,
-                                  "Action_Start": str(int(action_indices[2*i]/60)).zfill(2) + ":" + str(int(action_indices[2*i]%60)).zfill(2),
-                                  "Action_End": str(int(action_indices[(2*i)+1]/60)).zfill(2) + ":" + str(int(action_indices[(2*i)+1]%60)).zfill(2),
-                                  "Duration": int(action_indices[(2*i)+1]) - int(action_indices[2*i]),
-                                  "Intensity": round(arr[action_indices[2*i]+1], 1)}, ignore_index=True)
+        if not np.isinf(arr[action_indices[2*i]+1]):
+            temp_df = temp_df.append({"Video_Name": vid_name,
+                                      "Action_Start": str(int(action_indices[2*i]/60)).zfill(2) + ":" + str(int(action_indices[2*i]%60)).zfill(2),
+                                      "Action_End": str(int(action_indices[(2*i)+1]/60)).zfill(2) + ":" + str(int(action_indices[(2*i)+1]%60)).zfill(2),
+                                      "Duration": int(action_indices[(2*i)+1]) - int(action_indices[2*i]),
+                                      "Intensity": round(arr[action_indices[2*i]+1], 1)}, ignore_index=True)
     return temp_df
 
-for dir in sorted(glob.glob('D:\\Rabbit Research Videos\\HPC_Analysis\\WP32_Cycle3\\Action_Diagrams\\C*')):
+for dir in sorted(glob.glob('D:\\Rabbit Research Videos\\HPC_Analysis\\WP32_Cycle2\\Action_Diagrams_Intensity_12\\C*')):
     camera_text = dir.rsplit('\\', 1)[1]
-    action_diagram_path = os.path.join('D:\\Rabbit Research Videos\\HPC_Analysis\\WP32_Cycle3\\Action_Diagrams\\', camera_text)
+    action_diagram_path = os.path.join('D:\\Rabbit Research Videos\\HPC_Analysis\\WP32_Cycle2\\Action_Diagrams_Intensity_12\\', camera_text)
 
     # Create action diagram directories
     if not os.path.exists(action_diagram_path):
@@ -144,7 +145,7 @@ for dir in sorted(glob.glob('D:\\Rabbit Research Videos\\HPC_Analysis\\WP32_Cycl
                 else:
                     temp_arr = heat_map_module.numpy_io('read', action_arr)
                     master_df = master_df.append(get_action_moments_wp2(temp_arr, vid_text.rsplit("_", 1)[0]))
-    master_df.to_excel('D:\\Rabbit Research Videos\\HPC_Analysis\\WP32_Cycle3\\Action_Diagrams\\Action_Moments_Excel_Recommender\\' + camera_text + '.xlsx',
+    master_df.to_excel('D:\\Rabbit Research Videos\\HPC_Analysis\\WP32_Cycle2\\Action_Diagrams_Intensity_12\\Action_Moments_Excel_Recommender_Sampled\\' + camera_text + '.xlsx',
                        index=False)
 
 ## Checkpoint Complete!##

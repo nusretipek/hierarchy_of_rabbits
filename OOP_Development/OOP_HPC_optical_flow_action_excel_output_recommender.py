@@ -11,7 +11,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 # Global parameters
 
-action_diagram_dir = "D:\\Rabbit Research Videos\\HPC_Analysis\\WP32_Cycle3\\Action_Diagrams\\"
+action_diagram_dir = "D:\\Rabbit Research Videos\\HPC_Analysis\\WP32_Cycle1\\Action_Diagrams\\remainder_videos"
 save_dir = "D:\\Rabbit Research Videos\\HPC_Analysis\\Test"
 file_extension = "\\*filtered.npy"
 sample_bool = False

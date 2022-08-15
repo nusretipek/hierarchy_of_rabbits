@@ -6,6 +6,7 @@ import warnings
 import cv2
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
+# Loop Cameras
 for dir in sorted(glob.glob('D:\\Rabbit Research Videos\\WP 3.2\\C*')):
     camera_text = dir.rsplit('\\', 1)[1]
     action_clips_path = os.path.join('D:\\Rabbit Research Videos\\HPC_Analysis\\WP32\\Action_Video_Clips', camera_text)

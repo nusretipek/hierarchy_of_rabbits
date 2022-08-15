@@ -94,6 +94,3 @@ for dir in sorted(glob.glob('/media/nipek/My Book/Rabbit Research Videos/WP 3.2/
         heat_map_module.numpy_io('write', os.path.join(rabbit_over_platform_path, (vid_name + '.npy')), temp_arr)
 
 ## Checkpoint Complete!##
-
-
-

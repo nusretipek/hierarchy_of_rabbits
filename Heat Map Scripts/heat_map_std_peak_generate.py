@@ -1,11 +1,7 @@
 # Import statements
 
 import heat_map_module
-from os.path import exists
-from os import walk
-import cv2
 import glob
-import json
 
 # Generate and save std and peakness
 

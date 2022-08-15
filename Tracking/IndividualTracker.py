@@ -114,7 +114,11 @@ class RabbitTracker:
             if minimum_idx is None or temp_dist < minimum_distance:
                 minimum_distance = temp_dist
                 minimum_idx = idx
-        return self.get_centroid_bbox(self.get_bbox(frame)[minimum_idx]), minimum_distance
+
+        if minimum_idx is not None:
+            return self.get_centroid_bbox(self.get_bbox(frame)[minimum_idx]), minimum_distance
+        else:
+            return prev_point, 0
 
     # Compute linear extrapolation between two points
     """
@@ -823,7 +827,6 @@ class RabbitTracker:
     def clean_candidate_track(track, min_prev, min_lead):
         prev_broken_count = 0
         in_between_idx = []
-
         for idx, (point, confidence) in enumerate(track):
             if point == (-1, -1) or confidence == 0:
                 prev_broken_count += 1
@@ -831,7 +834,8 @@ class RabbitTracker:
             else:
                 if prev_broken_count >= min_prev:
                     for idy in range(min_lead):
-                        if track[idx + idy + 1][0] == (-1, -1) or track[idx + idy + 1][1] == 0:
+                        if idx + idy + 1 < len(track) and \
+                                (track[idx + idy + 1][0] == (-1, -1) or track[idx + idy + 1][1] == 0):
                             in_between_idx.append(idx)
                             break
                 prev_broken_count = 0
@@ -901,20 +905,21 @@ class RabbitTracker:
             for key in track_point_dict:
                 for other_track_id in other_tracks:
                     if track_point_dict[key]['point'] == self.get_track(other_track_id).point_dict[key]['point']:
-                        initial_minus_one_point = track_point_dict[str(int(key) - 1)]['point']
-                        other_minus_one_point = self.get_track(other_track_id).point_dict[str(int(key) - 1)]['point']
-                        initial_point = track_point_dict[key]['point']
+                        if (int(key) - 1) > 0:
+                            initial_minus_one_point = track_point_dict[str(int(key) - 1)]['point']
+                            other_minus_one_point = self.get_track(other_track_id).point_dict[str(int(key) - 1)]['point']
+                            initial_point = track_point_dict[key]['point']
 
-                        if initial_minus_one_point is not None and \
-                                other_minus_one_point is not None and initial_point is not None:
-                            distance_initial_track = distance.euclidean(initial_minus_one_point, initial_point)
-                            distance_other_track = distance.euclidean(other_minus_one_point, initial_point)
-                            if distance_initial_track > distance_other_track:
-                                self.get_track(track_id).add_point(key, track_point_dict[str(int(key) - 1)]['point'])
-                            else:
-                                self.get_track(other_track_id).add_point(key,
-                                                                         self.get_track(other_track_id).point_dict[
-                                                                             str(int(key) - 1)]['point'])
+                            if initial_minus_one_point is not None and \
+                                    other_minus_one_point is not None and initial_point is not None:
+                                distance_initial_track = distance.euclidean(initial_minus_one_point, initial_point)
+                                distance_other_track = distance.euclidean(other_minus_one_point, initial_point)
+                                if distance_initial_track > distance_other_track:
+                                    self.get_track(track_id).add_point(key, track_point_dict[str(int(key) - 1)]['point'])
+                                else:
+                                    self.get_track(other_track_id).add_point(key,
+                                                                             self.get_track(other_track_id).point_dict[
+                                                                                 str(int(key) - 1)]['point'])
 
     # Filter volatile track movements and separate close tracks
     """
@@ -934,7 +939,7 @@ class RabbitTracker:
             track_point_dict = self.get_track(track_id).point_dict
             prev_key = None
             for key in track_point_dict:
-                if key != str(0):
+                if key != str(0) and track_point_dict[key]['point'] is not None:
                     temp_distance = distance.euclidean(track_point_dict[str(int(key) - 1)]['point'],
                                                        track_point_dict[key]['point'])
                     if temp_distance > 50:
@@ -983,7 +988,7 @@ class RabbitTracker:
                                 overlap_count += 1
                                 overlap_bool = True
                                 temp_other_track = other_track_id
-                if overlap_count > 0 and not overlap_bool:
+                if overlap_count > 0 and (int(key) - overlap_count) > 0 and (not overlap_bool):
                     avg_point = ((track_point_dict[str(int(key) - overlap_count)]['point'][0] +
                                   self.get_track(temp_other_track).point_dict[str(int(key) - overlap_count)]['point'][
                                       0])
@@ -1051,11 +1056,11 @@ class RabbitTracker:
         c = 1
         track_point_dict = self.get_track(track_id).point_dict
         if method == 'backward':
-            while track_point_dict[str(int(key) - c)]['confidence'] < 0.8:
+            while str(int(key) - c) in track_point_dict and track_point_dict[str(int(key) - c)]['confidence'] < 0.8:
                 c += 1
             return c
         if method == 'forward':
-            while track_point_dict[str(int(key) + c)]['confidence'] < 0.8:
+            while str(int(key) + c) in track_point_dict and track_point_dict[str(int(key) + c)]['confidence'] < 0.8:
                 c += 1
             return c
 
@@ -1075,17 +1080,18 @@ class RabbitTracker:
     """
     def fix_assignment_of_tracks(self, track_id, start_frame, end_frame, verbose=False):
         track_point_dict = self.get_track(track_id).point_dict
-        ext_arr = self.get_extrapolation_between_points(track_point_dict[str(start_frame - 1)]['point'],
-                                                        track_point_dict[str(end_frame + 1)]['point'],
-                                                        end_frame - start_frame)
-        for idx in range(start_frame, end_frame):
-            self.get_track(track_id).add_point(idx, ext_arr[idx - start_frame])
-            self.get_track(track_id).add_confidence(idx, 0.8)
+        if start_frame > 0 and end_frame < len(track_point_dict)-1:
+            ext_arr = self.get_extrapolation_between_points(track_point_dict[str(start_frame - 1)]['point'],
+                                                            track_point_dict[str(end_frame + 1)]['point'],
+                                                            end_frame - start_frame)
+            for idx in range(start_frame, end_frame):
+                self.get_track(track_id).add_point(idx, ext_arr[idx - start_frame])
+                self.get_track(track_id).add_confidence(idx, 0.8)
 
-        if verbose:
-            track_point_dict = self.get_track(track_id).point_dict
-            for idx in range(start_frame - 1, end_frame + 1):
-                print(track_point_dict[str(idx)])
+            if verbose:
+                track_point_dict = self.get_track(track_id).point_dict
+                for idx in range(start_frame - 1, end_frame + 1):
+                    print(track_point_dict[str(idx)])
 
     # Main function to track rabbits
     """

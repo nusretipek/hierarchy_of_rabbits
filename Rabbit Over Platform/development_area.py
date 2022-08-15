@@ -16,11 +16,15 @@ else:
 
 # Get platform parameters dictionary
 
-if exists("/media/nipek/My Book/Rabbit Research Videos/WP 3.2/Analysis/Rabbit_Over_Platform/rabbit_over_platform_parameters.json"):
-    with open("/media/nipek/My Book/Rabbit Research Videos/WP 3.2/Analysis/Rabbit_Over_Platform/rabbit_over_platform_parameters.json", "r") as f:
+if exists(
+        "/media/nipek/My Book/Rabbit Research Videos/WP 3.2/Analysis/Rabbit_Over_Platform/rabbit_over_platform_parameters.json"):
+    with open(
+            "/media/nipek/My Book/Rabbit Research Videos/WP 3.2/Analysis/Rabbit_Over_Platform/rabbit_over_platform_parameters.json",
+            "r") as f:
         rabbit_over_platform_parameters = json.load(f)
 else:
     print('Create platform parameters dictionary!')
+
 
 def decrease_brightness(hsv_img, value=100):
     h, s, v = cv2.split(hsv_img)
@@ -29,6 +33,7 @@ def decrease_brightness(hsv_img, value=100):
     final_hsv = cv2.merge((h, s, v))
     img = cv2.cvtColor(final_hsv, cv2.COLOR_HSV2BGR)
     return img
+
 
 def platform_usage_wp2_pool(vid, crop_parameters, platform_parameters):
     start_time = time.time()
@@ -39,7 +44,8 @@ def platform_usage_wp2_pool(vid, crop_parameters, platform_parameters):
     frame_skip_constant = 25
 
     ## Create empty Numpy array
-    platform_use_frame = np.zeros(((int(cap.get(cv2.CAP_PROP_FRAME_COUNT) / frame_skip_constant))+1), np.dtype('uint16'))
+    platform_use_frame = np.zeros(((int(cap.get(cv2.CAP_PROP_FRAME_COUNT) / frame_skip_constant)) + 1),
+                                  np.dtype('uint16'))
 
     ## Reading video frame by frame
     success = True
@@ -48,9 +54,9 @@ def platform_usage_wp2_pool(vid, crop_parameters, platform_parameters):
         success, image = cap.read()
         if success:
             ### convert each image to grayscale
-            frame_HSV = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)[crop_parameters[0]:crop_parameters[1],
-                        crop_parameters[2]:crop_parameters[3]][platform_parameters[0]:platform_parameters[1], :]
-            gray_img = cv2.cvtColor(decrease_brightness(frame_HSV), cv2.COLOR_BGR2GRAY)
+            frame_hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)[crop_parameters[0]:crop_parameters[1],
+                                                               crop_parameters[2]:crop_parameters[3]][platform_parameters[0]:platform_parameters[1], :]
+            gray_img = cv2.cvtColor(decrease_brightness(frame_hsv), cv2.COLOR_BGR2GRAY)
             result = gray_img.copy()
 
             ### Edge detection
@@ -102,5 +108,6 @@ def platform_usage_wp2_pool(vid, crop_parameters, platform_parameters):
     print("Total execution time for platform usage:", (time.time() - start_time), "seconds")
     return platform_use_frame
 
+
 platform_usage_wp2_pool('/media/nipek/My Book/Rabbit Research Videos/WP 3.2/Camera 12/kon12.20210701_020009.mp4',
-                          crop_parameters['Camera 12'], rabbit_over_platform_parameters['Camera 12'])
+                        crop_parameters['Camera 12'], rabbit_over_platform_parameters['Camera 12'])

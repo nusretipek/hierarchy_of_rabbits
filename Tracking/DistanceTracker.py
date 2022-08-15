@@ -1,4 +1,3 @@
-import json
 from scipy.spatial import distance
 
 
@@ -110,9 +109,11 @@ class DistanceTracker:
 
     @staticmethod
     def delete_track_centroid(distance_dict, key, element):
-        del distance_dict[key]
+        if key in distance_dict:
+            del distance_dict[key]
         for key in distance_dict:
-            del distance_dict[key][element]
+            if element in distance_dict[key]:
+                del distance_dict[key][element]
         return distance_dict
 
     # generate tracks

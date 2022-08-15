@@ -77,8 +77,8 @@ def get_heat_map_wp2(vid, mask, crop_parameters, vid_name=''):
 # print(temp_arr[7:9,25:45])
 # print(arr[7:9,25:45])
 # import glob
-# for dir in glob.glob('/media/ricky/My Book/Rabbit Research Videos/WP 3.2/Camera 1'):
-#    print(dir)
+# for directory in glob.glob('/media/ricky/My Book/Rabbit Research Videos/WP 3.2/Camera 1'):
+#    print(directory)
 
 def test_cage_open_wp2(heatmap_file):
     img = cv2.imread(heatmap_file, cv2.IMREAD_GRAYSCALE)

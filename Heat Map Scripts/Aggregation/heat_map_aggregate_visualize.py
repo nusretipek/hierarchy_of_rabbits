@@ -1,6 +1,5 @@
 # Import statements
 
-import os
 import heat_map_module
 import cv2
 import glob
@@ -11,7 +10,7 @@ import numpy as np
 for dir in glob.glob('/media/nipek/My Book/Rabbit Research Videos/WP 3.2/Analysis/Master_Heatmaps/*'):
     for vid in glob.glob(dir + '/*.npy'):
         location_name = vid.rsplit('/', 1)[0]
-        vid_name = vid.rsplit('/', 1)[1].rsplit('.',1)[0]
+        vid_name = vid.rsplit('/', 1)[1].rsplit('.', 1)[0]
         temp_arr = heat_map_module.numpy_io('read', vid)
 
         # Binary
