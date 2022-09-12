@@ -3,8 +3,8 @@
 ## Rule-based Agonistic Action Detection
 
 All rules can be found in the file -> Behaviour Detection/BehaviorDetector.py <br>
-Players are animals involved in an unknown event (A and B) and also positionally closed unknown animal P. <br>
-All of the rules are cross-checked with a matching counter move and validated robustly. For more details see the code file. <br>
+Players are animals involved in an unknown event (A and B) and also positionally closed unknown animal P <br>
+All of the rules are cross-checked with a matching counter move and validated robustly. For more details see the code file <br>
 
 ### Rules
 
