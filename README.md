@@ -7,7 +7,9 @@ All rules can be found in the file -> Behaviour Detection/BehaviorDetector.py
 ### Rules
 
 Players are animals involved in an unknown event (A and B) and also positionally closed unknown animal P
+All of the rules are cross-checked with a matching counter move and validated robustly. For more details see the code file.
 
+---
 1. Absolute velocity of animal A is larger than or equal to 20 (t-10 to t-0 and also t0 to t+10) -> Initiator A 
 2. Absolute velocity of animal B is larger than or equal to 20 (t-10 to t-0 and also t0 to t+10) -> Initiator B
 3. Absolute difference in velocity between animal A and B is less than 5 and sum of their absolute velocity is larger than or equal to 20 (t0 to t+10) -> 
