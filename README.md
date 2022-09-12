@@ -3,11 +3,10 @@
 ## Rule-based Agonistic Action Detection
 
 All rules can be found in the file -> Behaviour Detection/BehaviorDetector.py
+Players are animals involved in an unknown event (A and B) and also positionally closed unknown animal P. <br>
+All of the rules are cross-checked with a matching counter move and validated robustly. For more details see the code file.
 
 ### Rules
-
-Players are animals involved in an unknown event (A and B) and also positionally closed unknown animal P
-All of the rules are cross-checked with a matching counter move and validated robustly. For more details see the code file.
 
 ---
 1. Absolute velocity of animal A is larger than or equal to 20 (t-10 to t-0 and also t0 to t+10) -> Initiator A 
